@@ -9,11 +9,10 @@ class Node:
         self.node_position = node_position
         self.connections = []
         #set initial distance of node higher than any that could be generated on grid
-        self.distance = 10,000
-        self.node_weight = random.randint(0,9)      
+        self.distance = 10000.
+        self.weight = random.randint(0,9)
         self.previous_node = 0
-        
-#above here all works
+    
 
 #class Algorithm(ABC):
 #make djikstra subclass of algorithm
@@ -47,9 +46,10 @@ class Dijkstra():
                 row_of_nodes.append(Node(node_position))
             self.nodes.append(row_of_nodes)
         
-    def get_to_starting_position(self, starting_position):
+    def get_to_starting_position(self, starting_position =(0,0)):
         self.current_node = self.nodes[starting_position[0]][starting_position[1]]
         self.current_node.distance = 0
+        
         
     def get_node_connections(self):
         for row in range(self.height):
@@ -72,7 +72,7 @@ class Dijkstra():
         #get current node connection distances
         for connection in self.current_node.connections:
             #the problem is with node_weight, it is empty
-            new_distance = connection.node_weight + self.current_node.distance
+            new_distance = connection.weight + self.current_node.distance
             # will never relabel the node it just came off
             if connection.distance > new_distance:
                 connection.distance = new_distance
@@ -82,7 +82,13 @@ class Dijkstra():
             self.seen_but_not_visited_nodes.append(connection)
             
         #make sure there are no repeated nodes in seen nodes
-        self.seen_but_not_visited_nodes = np.unique(self.seen_but_not_visited_nodes)
+        temp_list = []
+        [temp_list.append(i) for i in self.seen_but_not_visited_nodes if i not in temp_list]
+        self.seen_but_not_visited_nodes = temp_list
+        #make sure no node is visited twice
+        self.seen_but_not_visited_nodes = [
+            i for i in self.seen_but_not_visited_nodes if i not in self.visited_nodes
+            ]
                     
     def move(self):
         #move to an unvisited node that has the smallest distance
@@ -110,57 +116,95 @@ class Dijkstra():
        
         
     def go(self):
-        self.update_connection_distances()
-         
-        while self.seen_but_not_visited_nodes > 0:
-             self.move()
-             self.update_connection_distances()
-        
-        
-        
-   
-my_algorithm = Dijkstra(4,4)      
-
-my_algorithm.get_grid_nodes()  
-
-
-my_algorithm.get_to_starting_position((0,3))
-my_algorithm.current_node.node_position
+        #self.get_grid_nodes()
+        self.get_to_starting_position()
+        self.get_node_connections()
+        self.update_connection_distances()         
+        while len(self.seen_but_not_visited_nodes) > 0:
+            print()
+            self.move()
+            self.update_connection_distances()
     
-my_algorithm.get_node_connections()
-my_algorithm.current_node.distance
-my_algorithm.update_connection_distances()
+    def find_path(self):
+        final_path_node = self.nodes[self.height-1][self.width-1]
+        
+        path_node = final_path_node
+        print("final distance at node {} is: {}".format(path_node.node_position, path_node.distance))
+        path_node = path_node.previous_node
+        
+        while type(path_node.previous_node) == Node:
+            print("The previous node is {} and has distance {}, and weight {}".format(path_node.node_position, path_node.distance, path_node.weight))
+            path_node = path_node.previous_node
+        
+######### dOES IT WORK? #############
 
-connection_weights = []
-for connection in my_algorithm.current_node.connections:
-    print(connection)
+my_algorithm = Dijkstra(10,10) 
+my_algorithm.get_grid_nodes()      
+my_algorithm.go()
+my_algorithm.find_path()
+
+
+
+
+
+
+
+#my_algorithm.get_to_starting_position()
+#my_algorithm.current_node.node_position
+
+#my_algorithm.get_node_weights()
+#my_algorithm.nodes[0][0]
+
+#my_algorithm.get_node_connections()
+#my_algorithm.nodes[1][1].distance
+
+#my_algorithm.update_connection_distances()
+#my_algorithm.move()
+#my_algorithm.current_node.node_position
+#my_algorithm.current_node.distance
+
+#my_algorithm.nodes[3][3].distance
+#my_algorithm.nodes[3][3].weight
+#my_algorithm.nodes[3][3].previous_node.node_position
+
+#type(my_algorithm.nodes[1][3].previous_node) == Node
+
+#path_node = my_algorithm.nodes[3][3]
+#while type(path_node.previous_node) == Node:
+#    print("The previous node is {} and has distance {}, and weight {}".format(path_node.node_position, path_node.distance, path_node.weight))
+#    path_node = path_node.previous_node
+#my_algorithm.seen_but_not_visited_nodes
+#connection_weights = []
+#for connection in my_algorithm.current_node.connections:
+#    print(connection)
     
-connection_weights
-my_algorithm.move()
+#connection_weights
+#my_algorithm.move()
+#my_algorithm.current_node.node_position
+
+#y = sum(my_algorithm.nodes[2][3].node_weight, my_algorithm.current_node.distance)
+#print(y)
 
 
-y = sum(my_algorithm.nodes[2][3].node_weight, my_algorithm.current_node.distance)
-print(y)
 
 
 
-
-
-print(help(Grid))
+#print(help(Grid))
 
 ###################### Testing ##########################
-my_node_1 = Node((3,4))
-my_node_2 = Node((3,5))    
-my_node_1.node_weight
-my_node_2.node_weight
+#my_node_1 = Node((3,4))
+#my_node_2 = Node((3,5))    
+#my_node_1.node_weight
+#my_node_2.node_weight
 
-x = [0,1,2,3]
-y = [2,3,4,5,5,4]
-y = np.unique(y)
-y    
-x = [i for i in x if i not in y]
-print(x)             
+#x = []
+#y = [2,3,4,5,5,4]
+#y = np.unique(y)
+#y    
+#[x.append(i) for i in y if i not in x]
+#y = x
+#print(y)             
 
-z = [1]
-for i in z:
-    print(i)
+#z = [1]
+#for i in z:
+#    print(i)
