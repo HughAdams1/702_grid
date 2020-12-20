@@ -1,6 +1,7 @@
 import random
 #from abc import ABC, abstractmethod
 import numpy as np
+from scipy import stats
 
 class Node:
     def __init__(self, node_position):
@@ -154,10 +155,11 @@ class ACO():
         #self.current_node = self.nodes[self.width - 1][0]
 
         self.visited_nodes = []
-
+        self.end = False
         self.height = height
         self.width = width        
         self.nodes = []
+        self.end_nodes = []
             
     def get_grid_nodes(self):
         for row in range(self.height):
@@ -192,27 +194,21 @@ class ACO():
                 #error, node has no 'width'
                 if row > 0:
                     connection_and_tau = (self.nodes[row-1][column], 1, 0)
-                    node.connections.append(connection_and_tau)
-        
-    #get m ants to set out, make random choices, leave a pheromone trail    
+                    node.connections.append(connection_and_tau)    
         
     
     def one_ant(self):
+        self.end = False
         self.visited_nodes = []
-        #the way that weights is initial ised needs to be updated
-        end_point = self.nodes[self.height-1][self.width-1]
-        while self.current_node != end_point: 
-            #so that ant doesn't go straight back where it came from
-            
-            
-            #update node distance, for calculating how much pheromone to drop at the end
-            #self.current_node.distance = self.current_node.weight + self.current_node.previous_node[0].distance
-     
+        self.get_to_starting_position()
+        while self.end == False: 
+            self.move()
+        self.end_nodes.append(self.current_node.node_position)
+        #print("end position is : {}".format(self.current_node.node_position))
+        
     def move(self):
         moves = [(x,y,z) for (x,y,z) in self.current_node.connections if x not in self.visited_nodes]
-        if len(moves) == 0:
-            print("end position is : {}".format(self.current_node.node_position))
-        else:
+        if len(moves)>0:            
             tau_prob_distribution = [x[1]/(x[0].weight + 0.001) for x in moves]
             tau_prob_distribution = [x[1]/(x[0].weight + 0.001) for x in moves]
             tau_prob_distribution = [x / sum(tau_prob_distribution) for x in tau_prob_distribution]
@@ -222,21 +218,37 @@ class ACO():
             #move to new node
             self.visited_nodes.append(self.current_node)
             self.current_node = new_connection[0]
-        
+            self.current_node.distance = self.current_node.weight + self.current_node.previous_node[0].distance
+            self.end = False
+        else:
+            self.end = True
     def calculate_tau_update(self):
         length_of_path = self.current_node.distance
-        end_point = self.nodes[self.height-1][self.width-1]
-        #starting_point = self.nodes[0][0]
-        while self.current_node.node_position != (0, 0):
-            if self.current_node == end_point:
-                a = (self.current_node.previous_node[0], self.current_node.previous_node[1], self.current_node.previous_node[2] + 1/length_of_path)
-                self.current_node.previous_node = a
-            else:
-                a = (self.current_node.previous_node[0], self.current_node.previous_node[1], self.current_node.previous_node[2] + 1/length_of_path)
-                self.current_node.previous_node = a
-                b = (self.current_node.next_node[0], self.current_node.next_node[1], self.current_node.next_node[2] + 1/length_of_path)
-                self.current_node.next_node = b
-            self.current_node = self.current_node.previous_node[0]
+        
+        for row in range(self.height):
+            for column in range(self.width):
+                node = self.nodes[row][column]
+                if len(node.next_node)>0:
+                    b = (node.next_node[0], node.next_node[1], node.next_node[2] + 1/length_of_path)
+                    node.next_node = b
+                if len(node.previous_node)>0:
+                    a = (node.previous_node[0], node.previous_node[1], node.previous_node[2] + 1/length_of_path)
+                    node.previous_node = a
+        
+        
+        
+       # end_point = self.nodes[self.height-1][self.width-1]
+       # #starting_point = self.nodes[0][0]
+       # while self.current_node.node_position != (0, 0):
+       #     if self.current_node == end_point:
+       #         a = (self.current_node.previous_node[0], self.current_node.previous_node[1], self.current_node.previous_node[2] + 1/length_of_path)
+       #         self.current_node.previous_node = a
+       #     else:
+       #         a = (self.current_node.previous_node[0], self.current_node.previous_node[1], self.current_node.previous_node[2] + 1/length_of_path)
+       #         self.current_node.previous_node = a
+       #         b = (self.current_node.next_node[0], self.current_node.next_node[1], self.current_node.next_node[2] + 1/length_of_path)
+       #         self.current_node.next_node = b
+       #     self.current_node = self.current_node.previous_node[0]
                     
     def go(self, population, trips):
         self.get_grid_nodes()
@@ -257,8 +269,6 @@ class ACO():
 
 
                 
-                
-            #add tau updates to tau
 
         
        
@@ -276,54 +286,13 @@ class ACO():
             
 ######################
 
-my_ACO = ACO(3, 3)
-my_ACO.go(3,4)
+my_ACO = ACO(100, 100)
+my_ACO.go(30,40)
 
 
-my_ACO.get_grid_nodes()
-my_ACO.get_node_connections()
-my_ACO.get_to_starting_position()
-my_ACO.move()
-len(my_ACO.visited_nodes)
-my_ACO.visited_nodes
-
-my_ACO.visited_nodes = []
-
-my_ACO.one_ant()
-my_ACO.find_path
-my_ACO.current_node.node_position
-my_ACO.current_node.previous_node
-my_ACO.current_node = my_ACO.current_node.previous_node[0]
+accuracy_sum = [1 for x in my_ACO.end_nodes if x == (99,99)]
+accuracy_sum = sum(accuracy_sum)/len(my_ACO.end_nodes)
+accuracy_sum
+#as we can see this algorithm doesn't work
 
 
-my_ACO.calculate_tau_update()
-
-
-#my_ACO.nodes[0][0].previous_node
-
-for row in my_ACO.nodes:
-    for node in row:
-        if len(node.previous_node) > 0:
-            node.previous_node = (node.previous_node[0], (1-0.4)*node.previous_node[1] + node.previous_node[2], 0)
-        if len(node.next_node) > 0:
-            node.next_node = (node.next_node[0], (1-0.4)*node.next_node[1] + node.next_node[2], 0)
-
-
-
-
-my_ACO.current_node.connections
-my_ACO.current_node.previous_node = my_ACO.current_node.connections[0]
-my_ACO.current_node.previous_node
-moves = []
-moves = [x for x in my_ACO.current_node.connections if x != my_ACO.current_node.previous_node]
-moves
-tau_prob_distribution = [x[1]/x[0].weight for x in moves]
-tau_prob_distribution = [x / sum(tau_prob_distribution) for x in tau_prob_distribution]
-tau_prob_distribution
-new_connection = random.choices(moves, weights = tau_prob_distribution)[0]
-new_connection
-new_connection[0][0].previous_node = [(my_ACO.current_node, new_connection[0][1], new_connection[0][2])]
-new_connection
-a = my_ACO.current_node.previous_node[2] + 1
-my_ACO.current_node.previous_node = (my_ACO.current_node.previous_node[0], my_ACO.current_node.previous_node[1], my_ACO.current_node.previous_node[2]+1)
-my_ACO.current_node.previous_node[2]
